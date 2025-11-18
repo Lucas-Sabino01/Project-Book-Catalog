@@ -1,5 +1,5 @@
 const sqlite3 = require('sqlite3').verbose()
-const { Sequelize } = require('sequelize')
+const { Sequelize, DataTypes } = require('sequelize')
 const DBSOURCE = "database.db"
 
 const sequelize = new Sequelize({
@@ -8,6 +8,20 @@ const sequelize = new Sequelize({
     'logging': process.env.NODE_ENV === 'test' ? false : console.log 
 })
 
-sequelize.sync()
+const db = {};
 
-module.exports = { sequelize }
+db.Sequelize = Sequelize;
+db.sequelize = sequelize;
+
+db.User = require('./models/userModel')(sequelize, DataTypes); 
+db.Book = require('./models/bookModel')(sequelize, DataTypes);
+
+Object.keys(db).forEach(modelName => {
+    if (db[modelName].associate) {
+        db[modelName].associate(db);
+    }
+});
+
+sequelize.sync({force: false});
+
+module.exports = db;

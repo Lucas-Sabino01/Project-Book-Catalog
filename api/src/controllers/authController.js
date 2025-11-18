@@ -1,8 +1,8 @@
-const User = require("../models/userModel.js")
+const db = require("../database.js"); 
+const User = db.User;                 
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const SECRET = process.env.SECRET
-
 
 exports.create = async (req, res) => {
     const { username, password, role } = req.body

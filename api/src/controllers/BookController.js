@@ -1,6 +1,6 @@
-const db = require('../database');
-const Book = db.Book;
+const db = require("../database.js");
 
+const Book = db.Book;
 
 const handleError = (res, error, status = 500) => {
     console.error("erro interno no servidor:", error.message);
@@ -11,17 +11,17 @@ const handleError = (res, error, status = 500) => {
 
 exports.create = async (req, res) => {
     try {
-        const { title, author, pages } = req.body;
-
+        const { title, author, pages, userOwnerId } = req.body;
         if (!title || !author) {
             return handleError(res, new Error("Título e Autor são campos obrigatórios."), 400);
         }
-
-        const newBook = { title, author, pages };
-
+        const newBook = { 
+            title,
+            author,
+            pages,
+            userOwnerId: userOwnerId };
         const book = await Book.create(newBook);
-        res.status(201).send(book); // 201 Created
-
+        res.status(201).send(book); 
     } catch (error) {
         handleError(res, error, 400);
     }
@@ -34,7 +34,6 @@ exports.update = async (req, res) => {
         const [num] = await Book.update(req.body, {
             where: { id: id }
         });
-
         if (num === 1) {
             res.send({ message: "Livro atualizado com sucesso." });
         } else {
@@ -47,12 +46,10 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
     const id = req.params.id;
-
     try {
         const num = await Book.destroy({
             where: { id: id }
         });
-
         if (num === 1) {
             res.send({ message: "Livro deletado com sucesso!" });
         } else {
