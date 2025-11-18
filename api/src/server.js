@@ -6,8 +6,12 @@ require("dotenv").config()
 app.use(express.json())
 
 const userRoutes = require('./routes/userRoutes.js');
+const bookRoutes = require('./routes/BookRoutes.js');
+
 
 app.use('/api', userRoutes);
+app.use('/api/livros', bookRoutes);
+
 app.get('/api', (req, res) => {
   res.send('API Vibe Coders está online!');
 });
@@ -15,3 +19,5 @@ app.get('/api', (req, res) => {
 app.listen(port, () => {
   console.log(`[servidor]: API rodando em http://localhost:${port}/api`);
 });
+
+
