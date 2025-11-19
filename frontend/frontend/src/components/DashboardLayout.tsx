@@ -12,12 +12,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { BookOpen, LogOut, User, Settings, Command } from "lucide-react";
 import { toast } from "sonner";
 import { CommandMenu } from "./CommandMenu";
+import { ProfileDialog } from "./ProfileDialog";
 import { useAuth } from "@/context/AuthContext";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
     toast.success("Logout realizado com sucesso!");
@@ -30,11 +31,18 @@ const DashboardLayout = () => {
     if (path === "/dashboard") return "Visão Geral";
     if (path === "/dashboard/books") return "Catálogo de Livros";
     if (path === "/dashboard/authors") return "Autores";
+    if (path === "/dashboard/admin") return "Administração";
     if (path === "/dashboard/settings") return "Configurações";
     return "Dashboard";
   };
 
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "??";
+    return name.substring(0, 2).toUpperCase();
+  };
+
   const [openCommandMenu, setOpenCommandMenu] = React.useState(false);
+  const [isProfileOpen, setIsProfileOpen] = React.useState(false);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -50,6 +58,7 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <CommandMenu open={openCommandMenu} setOpen={setOpenCommandMenu} handleLogout={handleLogout} />
+      <ProfileDialog open={isProfileOpen} onOpenChange={setIsProfileOpen} user={user} />
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Redesigned Header */}
@@ -89,14 +98,14 @@ const DashboardLayout = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10 ring-2 ring-primary/20">
-                      <AvatarFallback className="gradient-primary text-white font-semibold">
-                        VC
+                      <AvatarFallback className="gradient-primary text-white font-semibold text-lg">
+                        {getInitials(user?.username)}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setIsProfileOpen(true)}>
                     <User className="mr-2 h-4 w-4" />
                     Perfil
                   </DropdownMenuItem>

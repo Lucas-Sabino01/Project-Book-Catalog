@@ -11,29 +11,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoaderCircle } from "lucide-react";
-
-interface Book {
-  id: number;
-  titulo: string;
-  autor: string;
-  genero: string;
-  ano_publicacao: number;
-}
+import { Book } from "@/services/bookService";
 
 interface BookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   book: Book | null;
-  onSave: (book: Omit<Book, "id">) => void;
+  onSave: (book: { titulo: string, autor: string, genero: string, pages: number, ano_publicacao: number }) => void;
 }
 
-const BookForm = ({ book, onSave, onCancel }: { book: Book | null, onSave: (book: Omit<Book, "id">) => void, onCancel: () => void }) => {
+const BookForm = ({ book, onSave, onCancel }: { book: Book | null, onSave: (book: { titulo: string, autor: string, genero: string, pages: number, ano_publicacao: number }) => void, onCancel: () => void }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    titulo: book?.titulo || "",
-    autor: book?.autor || "",
-    genero: book?.genero || "",
-    ano_publicacao: book?.ano_publicacao.toString() || "",
+    titulo: book?.title || "",
+    autor: book?.author || "",
+    genero: book?.genre || "",
+    ano_publicacao: book?.publication_year?.toString() || "",
+    pages: book?.pages?.toString() || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,6 +39,7 @@ const BookForm = ({ book, onSave, onCancel }: { book: Book | null, onSave: (book
         autor: formData.autor,
         genero: formData.genero,
         ano_publicacao: parseInt(formData.ano_publicacao),
+        pages: parseInt(formData.pages),
       });
       setIsLoading(false);
     }, 1000);
@@ -80,6 +75,7 @@ const BookForm = ({ book, onSave, onCancel }: { book: Book | null, onSave: (book
             value={formData.genero}
             onChange={(e) => setFormData({ ...formData, genero: e.target.value })}
             disabled={isLoading}
+            placeholder="Ex: Ficção Científica"
             required
           />
         </div>
@@ -90,6 +86,17 @@ const BookForm = ({ book, onSave, onCancel }: { book: Book | null, onSave: (book
             type="number"
             value={formData.ano_publicacao}
             onChange={(e) => setFormData({ ...formData, ano_publicacao: e.target.value })}
+            disabled={isLoading}
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="pages">Páginas</Label>
+          <Input
+            id="pages"
+            type="number"
+            value={formData.pages}
+            onChange={(e) => setFormData({ ...formData, pages: e.target.value })}
             disabled={isLoading}
             required
           />

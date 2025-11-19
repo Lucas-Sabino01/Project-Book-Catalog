@@ -1,12 +1,14 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/context/AuthContext";
 import {
   BookOpen,
   LayoutDashboard,
   Users,
   Settings,
   LogOut,
+  Shield,
   Moon,
   Sun,
 } from "lucide-react";
@@ -27,9 +29,12 @@ interface CommandMenuProps {
   handleLogout: () => void;
 }
 
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 export function CommandMenu({ open, setOpen, handleLogout }: CommandMenuProps) {
   const navigate = useNavigate();
   const { setTheme } = useTheme();
+  const { user } = useAuth();
 
   const runCommand = (command: () => void) => {
     setOpen(false);
@@ -38,6 +43,11 @@ export function CommandMenu({ open, setOpen, handleLogout }: CommandMenuProps) {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
+      <DialogTitle className="sr-only">Menu de Comandos</DialogTitle>
+      <DialogDescription className="sr-only">
+        Use este menu para navegar rapidamente pela aplicação e executar ações.
+      </DialogDescription>
+
       <CommandInput placeholder="Digite um comando ou pesquise..." />
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
@@ -58,6 +68,12 @@ export function CommandMenu({ open, setOpen, handleLogout }: CommandMenuProps) {
             <Settings className="mr-2 h-4 w-4" />
             <span>Configurações</span>
           </CommandItem>
+          {user?.role === 'admin' && (
+            <CommandItem onSelect={() => runCommand(() => navigate("/dashboard/admin"))}>
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Administração</span>
+            </CommandItem>
+          )}
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Ações">

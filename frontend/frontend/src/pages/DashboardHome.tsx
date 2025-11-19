@@ -1,41 +1,37 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Users, TrendingUp, Library, ArrowUpRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { bookService, DashboardStats } from "@/services/bookService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DashboardHome = () => {
-  const stats = [
-    {
-      title: "Total de Livros",
-      value: "5",
-      change: "+2",
-      period: "este mês",
-      icon: BookOpen,
-      gradient: "gradient-primary",
-    },
-    {
-      title: "Autores",
-      value: "5",
-      change: "únicos",
-      period: "no catálogo",
-      icon: Users,
-      gradient: "gradient-accent",
-    },
-    {
-      title: "Gêneros",
-      value: "4",
-      change: "categorias",
-      period: "disponíveis",
-      icon: Library,
-      gradient: "gradient-primary",
-    },
-    {
-      title: "Crescimento",
-      value: "+40%",
-      change: "vs mês anterior",
-      period: "",
-      icon: TrendingUp,
-      gradient: "gradient-accent",
-    },
+  const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        const data = await bookService.getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Falha ao buscar estatísticas do dashboard:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const statCards = [
+    { title: "Total de Livros", value: stats?.totalBooks, change: "no catálogo", icon: BookOpen, gradient: "gradient-primary" },
+    { title: "Autores", value: stats?.totalAuthors, change: "únicos", icon: Users, gradient: "gradient-accent" },
+    { title: "Gêneros", value: stats?.totalGenres, change: "categorias", icon: Library, gradient: "gradient-primary" },
+    { title: "Crescimento", value: "+40%", change: "vs mês anterior", icon: TrendingUp, gradient: "gradient-accent" },
   ];
 
   const recentActivity = [
@@ -43,6 +39,22 @@ const DashboardHome = () => {
     { book: "Dom Casmurro", author: "Machado de Assis", action: "editado", time: "5h atrás" },
     { book: "O Cortiço", author: "Aluísio Azevedo", action: "visualizado", time: "1d atrás" },
   ];
+
+  const StatCardSkeleton = () => (
+    <Card className="relative overflow-hidden border-border/50">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <Skeleton className="h-12 w-12 rounded-xl" />
+          <Skeleton className="h-4 w-4" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-2/4" />
+          <Skeleton className="h-8 w-1/4" />
+          <Skeleton className="h-3 w-3/4" />
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -57,7 +69,7 @@ const DashboardHome = () => {
                 Seu catálogo está crescendo. Continue adicionando e organizando seus livros favoritos.
               </p>
             </div>
-            <Button className="gradient-primary border-0 text-white hover:opacity-90 transition-opacity">
+            <Button onClick={() => navigate('/dashboard/books')} className="gradient-primary border-0 text-white hover:opacity-90 transition-opacity">
               <Zap className="mr-2 h-4 w-4" />
               Adicionar Livro
             </Button>
@@ -67,35 +79,37 @@ const DashboardHome = () => {
 
       {/* Bento Grid Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card
-              key={stat.title}
-              className="relative overflow-hidden border-border/50 hover:border-primary/50 transition-all duration-300 group cursor-pointer"
-              style={{
-                animationDelay: `${index * 100}ms`,
-              }}
-            >
-              <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
-              <CardContent className="p-6 relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${stat.gradient} bg-opacity-10`}>
-                    <Icon className="h-5 w-5 text-primary" />
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, index) => <StatCardSkeleton key={index} />)
+        ) : (
+          statCards.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <Card
+                key={stat.title}
+                className="relative overflow-hidden border-border/50 hover:border-primary/50 transition-all duration-300 group cursor-pointer"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                }}
+              >
+                <div className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                <CardContent className="p-6 relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl ${stat.gradient} bg-opacity-10`}>
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
-                  <p className="text-3xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="text-accent font-medium">{stat.change}</span> {stat.period}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
+                    <p className="text-3xl font-bold">{stat.value ?? 'N/A'}</p>
+                    <p className="text-xs text-muted-foreground">{stat.change}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       {/* Two Column Layout */}
@@ -135,18 +149,36 @@ const DashboardHome = () => {
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold mb-6">Ações Rápidas</h3>
             <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start group">
-                <BookOpen className="mr-2 h-4 w-4 group-hover:text-primary transition-colors" />
-                Adicionar Livro
-              </Button>
-              <Button variant="outline" className="w-full justify-start group">
-                <Users className="mr-2 h-4 w-4 group-hover:text-accent transition-colors" />
-                Novo Autor
-              </Button>
-              <Button variant="outline" className="w-full justify-start group">
-                <Library className="mr-2 h-4 w-4 group-hover:text-primary transition-colors" />
-                Ver Catálogo
-              </Button>
+              {/* Botão Adicionar Livro */}
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-lg blur opacity-0 group-hover:opacity-75 transition duration-300" />
+                <Button onClick={() => navigate('/dashboard/books')} variant="outline" className="w-full justify-start relative z-10 bg-background hover:bg-muted">
+                  <BookOpen className="mr-2 h-4 w-4 text-primary" />
+                  Adicionar Livro
+                </Button>
+              </div>
+
+              {/* Botão Novo Autor */}
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-accent to-primary rounded-lg blur opacity-0 group-hover:opacity-75 transition duration-300" />
+                <Button 
+                  onClick={() => navigate('/dashboard/authors')}
+                  variant="outline" 
+                  className="w-full justify-start relative z-10 bg-background hover:bg-muted"
+                >
+                  <Users className="mr-2 h-4 w-4 text-accent" />
+                  Adicionar Autor
+                </Button>
+              </div>
+
+              {/* Botão Ver Catálogo */}
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-lg blur opacity-0 group-hover:opacity-75 transition duration-300" />
+                <Button onClick={() => navigate('/dashboard/books')} variant="outline" className="w-full justify-start relative z-10 bg-background hover:bg-muted">
+                  <Library className="mr-2 h-4 w-4 text-primary" />
+                  Ver Catálogo
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

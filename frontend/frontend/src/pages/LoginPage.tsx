@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { BookOpen, Sparkles, Moon, Sun, LoaderCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ const LoginPage = () => {
   const { login } = useAuth();
   const { theme, setTheme } = useTheme();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = { username: "", password: "" };
     let hasError = false;
@@ -48,19 +48,20 @@ const LoginPage = () => {
 
     setErrors(newErrors);
 
-    if (!hasError) {
-      setIsLoading(true);
-      toast.loading("Autenticando...");
+    if (hasError) return;
 
-      setTimeout(() => {
-        setIsLoading(false);
-        toast.dismiss();
-        toast.success(`Bem-vindo de volta, ${username}!`);
+    setIsLoading(true);
+    const loadingToast = toast.loading("Autenticando...");
 
-        login(username);
-        
-        navigate("/dashboard");
-      }, 1500);
+    try {
+      await login(username, password); // Passa username e password
+      toast.success(`Bem-vindo de volta, ${username}!`, { id: loadingToast });
+      navigate("/dashboard");
+    } catch (error) {
+      // O erro vem do AuthContext, que já formata a mensagem
+      toast.error(error instanceof Error ? error.message : "Ocorreu um erro desconhecido", { id: loadingToast });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -204,7 +205,7 @@ const LoginPage = () => {
             </div>
           </CardContent>
           
-          <CardFooter className="pt-2">
+          <CardFooter className="flex-col pt-2 gap-4">
             <Button 
               type="submit" 
               className="w-full h-12 text-base font-medium shadow-lg hover:shadow-xl hover:shadow-accent/20 transition-all duration-300 group/button relative overflow-hidden"
@@ -223,6 +224,12 @@ const LoginPage = () => {
               )}
               <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent/20 to-primary opacity-0 group-hover/button:opacity-100 transition-opacity duration-300" />
             </Button>
+            <p className="text-sm text-muted-foreground">
+              Não tem uma conta?{" "}
+              <Link to="/register" className="text-primary hover:underline font-medium">
+                Cadastre-se
+              </Link>
+            </p>
           </CardFooter>
         </form>
         

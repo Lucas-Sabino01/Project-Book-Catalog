@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,28 +27,15 @@ import { Plus, MoreHorizontal, Edit, Trash } from "lucide-react";
 import { BookDialog } from "@/components/BookDialog";
 import { DeleteBookDialog } from "@/components/DeleteBookDialog";
 import { toast } from "sonner";
-
-interface Book {
-  id: number;
-  titulo: string;
-  autor: string;
-  genero: string;
-  ano_publicacao: number;
-}
-
-const mockBooks: Book[] = [
-  { id: 1, titulo: "1984", autor: "George Orwell", genero: "Ficção Científica", ano_publicacao: 1949 },
-  { id: 2, titulo: "O Senhor dos Anéis", autor: "J.R.R. Tolkien", genero: "Fantasia", ano_publicacao: 1954 },
-  { id: 3, titulo: "Dom Casmurro", autor: "Machado de Assis", genero: "Romance", ano_publicacao: 1899 },
-  { id: 4, titulo: "Harry Potter e a Pedra Filosofal", autor: "J.K. Rowling", genero: "Fantasia", ano_publicacao: 1997 },
-  { id: 5, titulo: "O Pequeno Príncipe", autor: "Antoine de Saint-Exupéry", genero: "Fábula", ano_publicacao: 1943 },
-];
+import { bookService, Book } from "@/services/bookService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BooksPage = () => {
-  const [books, setBooks] = useState<Book[]>(mockBooks);
-  const [filteredBooks, setFilteredBooks] = useState<Book[]>(mockBooks);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -57,11 +44,29 @@ const BooksPage = () => {
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     const filtered = books.filter((book) =>
-      book.titulo.toLowerCase().includes(term.toLowerCase())
+      book.title.toLowerCase().includes(term.toLowerCase())
     );
     setFilteredBooks(filtered);
     setCurrentPage(1);
   };
+
+  const fetchBooks = async () => {
+    try {
+      setIsLoading(true);
+      const data = await bookService.getAllBooks();
+      setBooks(data);
+      setFilteredBooks(data);
+    } catch (error) {
+      toast.error("Falha ao buscar livros.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
 
   const handleAddBook = () => {
     setSelectedBook(null);
@@ -78,30 +83,32 @@ const BooksPage = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSaveBook = (bookData: Omit<Book, "id">) => {
-    if (selectedBook) {
-      const updatedBooks = books.map((book) =>
-        book.id === selectedBook.id ? { ...bookData, id: selectedBook.id } : book
-      );
-      setBooks(updatedBooks);
-      setFilteredBooks(updatedBooks);
-      toast.success("Livro atualizado com sucesso!");
-    } else {
-      const newBook = { ...bookData, id: Math.max(...books.map((b) => b.id)) + 1 };
-      setBooks([...books, newBook]);
-      setFilteredBooks([...books, newBook]);
-      toast.success("Livro adicionado com sucesso!");
+  const handleSaveBook = async (bookData: { titulo: string, autor: string, genero: string, pages: number, ano_publicacao: number }) => {
+    try {
+      if (selectedBook) {
+        await bookService.updateBook(selectedBook.id!, bookData);
+        toast.success("Livro atualizado com sucesso!");
+      } else {
+        await bookService.createBook(bookData);
+        toast.success("Livro adicionado com sucesso!");
+      }
+      fetchBooks();
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha ao salvar livro.");
     }
-    setIsDialogOpen(false);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (selectedBook) {
-      const updatedBooks = books.filter((book) => book.id !== selectedBook.id);
-      setBooks(updatedBooks);
-      setFilteredBooks(updatedBooks);
-      toast.success("Livro deletado!");
-      setIsDeleteDialogOpen(false);
+      try {
+        await bookService.deleteBook(selectedBook.id!);
+        toast.success("Livro deletado com sucesso!");
+        fetchBooks();
+        setIsDeleteDialogOpen(false);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Falha ao deletar livro.");
+      }
     }
   };
 
@@ -149,7 +156,15 @@ const BooksPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentBooks.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: booksPerPage }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell colSpan={5}>
+                    <Skeleton className="h-8 w-full" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : currentBooks.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground">
                   Nenhum livro encontrado.
@@ -158,10 +173,10 @@ const BooksPage = () => {
             ) : (
               currentBooks.map((book) => (
                 <TableRow key={book.id}>
-                  <TableCell className="font-medium">{book.titulo}</TableCell>
-                  <TableCell>{book.autor}</TableCell>
-                  <TableCell>{book.genero}</TableCell>
-                  <TableCell>{book.ano_publicacao}</TableCell>
+                  <TableCell className="font-medium">{book.title}</TableCell> 
+                  <TableCell>{book.author}</TableCell>
+                  <TableCell>{book.genre}</TableCell>
+                  <TableCell>{book.publication_year}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -234,7 +249,7 @@ const BooksPage = () => {
       <DeleteBookDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        bookTitle={selectedBook?.titulo || ""}
+        bookTitle={selectedBook?.title || ""}
         onConfirm={handleConfirmDelete}
       />
     </div>

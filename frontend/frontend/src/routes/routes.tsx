@@ -7,6 +7,8 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardHome from "@/pages/DashboardHome";
 import BooksPage from "@/pages/BooksPage";
 import AuthorsPage from "@/pages/Authorspage";
+import RegisterPage from "@/pages/RegisterPage";
+import AdminPage from "@/pages/AdminPage";
 
 export const router = createBrowserRouter([
   {
@@ -16,7 +18,7 @@ export const router = createBrowserRouter([
     children: [
       {
         element: <ProtectedRoute />,
-        children: [
+        children: [ // Todas as rotas protegidas ficam aqui
           {
             path: "dashboard",
             element: <DashboardLayout />,
@@ -24,13 +26,19 @@ export const router = createBrowserRouter([
               { index: true, element: <DashboardHome /> },
               { path: "books", element: <BooksPage /> },
               { path: "authors", element: <AuthorsPage /> },
+              { path: "admin", element: <AdminPage /> }, // Movido para cá
             ],
           },
         ],
       },
+      
       {
         path: "login",
         element: <LoginPage />,
+      },
+      {
+        path: "register",
+        element: <RegisterPage />,
       },
       { index: true, element: <Navigate to="/dashboard" replace /> },
     ],
