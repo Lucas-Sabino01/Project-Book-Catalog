@@ -64,11 +64,9 @@ Este projeto é um **monorepo** (Frontend e Backend no mesmo repositório). Siga
 
 ### 1. Clonar o Repositório
 
-```
-git clone [https://github.com/SEU_USUARIO/Project-Book-Catalog.git](https://github.com/SEU_USUARIO/Project-Book-Catalog.git)
+git clone [https://github.com/Lucas-Sabino01/Project-Book-Catalog](https://github.com/Lucas-Sabino01/Project-Book-Catalog)
 
 cd Project-Book-Catalog
-```
 
 ### 2. Configurar e Rodar o Backend (API)
 
