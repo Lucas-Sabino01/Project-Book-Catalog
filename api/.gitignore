@@ -18,8 +18,7 @@ Thumbs.db
 .env.production.local
 
 # Arquivo do banco de dados SQLite
-/api/database.db
-
+database.db
 # Arquivo de configuração do Sequelize (pode conter senhas)
 /api/config/config.json
 
