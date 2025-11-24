@@ -1,0 +1,25 @@
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const port = 3001;
+require("dotenv").config()
+
+app.use(express.json())
+app.use(cors());
+
+const userRoutes = require('./routes/userRoutes.js');
+const bookRoutes = require('./routes/BookRoutes.js');
+
+
+app.use('/api', userRoutes);
+app.use('/api/livros', bookRoutes);
+
+app.get('/api', (req, res) => {
+  res.send('API Vibe Coders está online!');
+});
+
+app.listen(port, () => {
+  console.log(`[servidor]: API rodando em http://localhost:${port}/api`);
+});
+
+
