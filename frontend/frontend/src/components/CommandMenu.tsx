@@ -68,7 +68,7 @@ export function CommandMenu({ open, setOpen, handleLogout }: CommandMenuProps) {
             <Settings className="mr-2 h-4 w-4" />
             <span>Configurações</span>
           </CommandItem>
-          {user?.role === 'admin' && (
+          {(user?.role === 'admin' || user?.role === '2') && (
             <CommandItem onSelect={() => runCommand(() => navigate("/dashboard/admin"))}>
               <Shield className="mr-2 h-4 w-4" />
               <span>Administração</span>

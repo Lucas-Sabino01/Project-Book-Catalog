@@ -47,7 +47,7 @@ const AdminPage = () => {
     );
   }
   
-  if (currentUser?.role !== 'admin') {
+  if (currentUser?.role !== 'admin' && currentUser?.role !== '2') {
     return (
       <div className="flex justify-center items-center h-screen text-destructive">
         Acesso negado. Você não tem permissão para ver esta página.
