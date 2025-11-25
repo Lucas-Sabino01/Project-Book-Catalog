@@ -112,6 +112,15 @@ Inicie a aplicação React:
 npm run dev
 # A aplicação rodará em http://localhost:3010
 ```
+## 🧪 Rodando os Testes
+
+O projeto conta com testes automatizados para garantir a qualidade.
+
+Para rodar todos os testes (`Frontend`) em sequência:
+```
+npm test
+```
+
  ## ⚙️ Configurações e Dicas de Desenvolvimento
 
 ### 🔒 Como se tornar Administrador (Admin)
